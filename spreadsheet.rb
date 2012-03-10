@@ -105,7 +105,7 @@ class GWorksheet
     unless @loaded
       load_meta
     end
-    @col_count
+    @title
   end
 
   def load min_row,min_col, max_row,max_col
@@ -134,7 +134,12 @@ class GWorksheet
     @cells = load(1, 1, @row_count, @col_count)
   end
 
-  def [] row,col
+  def [] row, col = nil
+    if col == nil
+      cells = load(row,1,row,col_count)
+      return cells.map{|k,v| v.elements['gs:cell'].text}
+    end
+
     if @cells && @cells[[row,col]]
       cells = @cells
     else
@@ -145,6 +150,17 @@ class GWorksheet
 
   def []= row,col,value
     values = {[row,col]=>value}
+    batch values
+  end
+
+  def << rowdata
+    values = {}
+    row = row_count + 1
+    col = 1
+    rowdata.each{|value|
+      values[[row,col]] = value
+      col += 1
+    }
     batch values
   end
 
@@ -213,6 +229,8 @@ class GWorksheet
       </feed>
     EOD
     r = @session.post(@cells_url+"/batch",xml)
+
+    load_meta
   end
 
 
