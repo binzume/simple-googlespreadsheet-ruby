@@ -4,7 +4,7 @@ require_relative 'spreadsheet'
 
 conf = YAML.load_file('account.yaml')
 
-spreadsheet_key = "0AlXPszXUpxhZdFdMRE1Rc1dEWjEtLXlqc3JDbms0Mmc"
+spreadsheet_key = "0AlXPszXUpxhZdFBLZXptOGlsOU9aRFpwaTVwTmtSekE"
 account = {
   'accountType' => 'HOSTED_OR_GOOGLE',
   'Email' =>  conf['email'],

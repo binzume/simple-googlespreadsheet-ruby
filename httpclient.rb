@@ -43,6 +43,16 @@ class HTTPClient
         @cookies[uri.host][k] = v
       }
     end
+    def response.status
+      response.code.to_i
+    end
+    def response.header
+      headers = {}
+      response.each{|header,value|
+        headers[header] = [value]
+      }
+      return headers
+    end
     return response
   end
 
@@ -51,6 +61,11 @@ class HTTPClient
     http,headers = pre_proc(uri,headers)
     r = http.get(uri.request_uri,headers,&block)
     return post_proc(uri,r)
+  end
+
+  def get_content url,headers = nil
+    r = get(url,headers)
+    return r.body
   end
 
   def post url,body,headers = nil,&block
