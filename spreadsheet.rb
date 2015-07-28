@@ -3,6 +3,9 @@
 #    http://www.binzume.net/
 
 require "rexml/document"
+require 'json'
+require 'openssl'
+require 'signet/oauth_2/client'
 require_relative 'httpclient'
 
 class GSession
@@ -11,6 +14,19 @@ class GSession
     @auth = nil
   end
 
+  def login_with_oauth2(json_data)
+    auth = Signet::OAuth2::Client.new(
+      :token_credential_uri => 'https://accounts.google.com/o/oauth2/token',
+      :audience =>             'https://accounts.google.com/o/oauth2/token',
+      :scope =>                ['https://spreadsheets.google.com/feeds'],
+      :issuer =>               json_data["client_email"],
+      :signing_key =>          OpenSSL::PKey::RSA.new(json_data["private_key"]))
+    auth.fetch_access_token!
+    @auth = auth.access_token
+    return true
+  end
+
+  ## Deplicated
   def login account
     r = @client.post('https://www.google.com/accounts/ClientLogin',account)
     if r.body =~ /Auth=([^\s]+)/
@@ -21,13 +37,13 @@ class GSession
   end
 
   def get url
-    return @client.get(url, {"Authorization"=>"GoogleLogin auth=#{@auth}"})
+    return @client.get(url, {"Authorization"=>"Bearer #{@auth}"})
   end
   def post url,data,headers=nil
-    return @client.post(url, data, {"Authorization"=>"GoogleLogin auth=#{@auth}", "Content-Type" => "application/atom+xml"})
+    return @client.post(url, data, {"Authorization"=>"Bearer #{@auth}", "Content-Type" => "application/atom+xml"})
   end
   def put url,data,headers=nil
-    return @client.put(url, data, {"Authorization"=>"GoogleLogin auth=#{@auth}", "Content-Type" => "application/atom+xml"})
+    return @client.put(url, data, {"Authorization"=>"Bearer #{@auth}", "Content-Type" => "application/atom+xml"})
   end
 end
 
@@ -303,6 +319,17 @@ end
 
 # google-spreadsheet-ruby compatible interface (see https://github.com/gimite/google-spreadsheet-ruby )
 module GoogleSpreadsheet
+  def self.login_with_oauth2 json_data
+    session = GSession.new
+    def session.spreadsheet_by_key spreadsheet_key
+      GSpreadsheet.new(self, spreadsheet_key)
+    end
+    unless session.login_with_oauth2(json_data)
+      return nil
+    end
+    return session
+   end
+
   def self.login email,passwd
     session = GSession.new
     def session.spreadsheet_by_key spreadsheet_key

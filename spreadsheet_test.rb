@@ -1,22 +1,11 @@
 #!/usr/bin/ruby -Ku
-require 'yaml'
 require_relative 'spreadsheet'
 
-conf = YAML.load_file('account.yaml')
-
 spreadsheet_key = "0AlXPszXUpxhZdFBLZXptOGlsOU9aRFpwaTVwTmtSekE"
-account = {
-  'accountType' => 'HOSTED_OR_GOOGLE',
-  'Email' =>  conf['email'],
-  'Passwd' => conf['passwd'],
-  'service' => 'wise', # GAE:ah CAL:cl PLUS:oz SPREADSHEET:wise
-  'source' => 'simple-spreadsheet.binzume.net',
-}
 
-
-# login
+# login (Get OAuth2 params from Google API Console (support only Service Account))
 session = GSession.new
-unless session.login(account)
+unless session.login_with_oauth2(JSON.parse(File.read('/root/binzume-bot-2f903d30a6df.json')))
   puts "auth error!"
   exit
 end

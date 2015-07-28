@@ -1,13 +1,11 @@
 #!/usr/bin/ruby -Ku
-require 'yaml'
+require 'json'
 require_relative 'spreadsheet'
-
-conf = YAML.load_file('account.yaml')
 
 spreadsheet_key = "0AlXPszXUpxhZdFBLZXptOGlsOU9aRFpwaTVwTmtSekE"
 
 # login
-session = GoogleSpreadsheet.login(conf['email'], conf['passwd'])
+session = GoogleSpreadsheet.login_with_oauth2(JSON.parse(File.read('/root/binzume-bot-2f903d30a6df.json')))
 
 # get first workseet
 ws = session.spreadsheet_by_key(spreadsheet_key).worksheets[0]
